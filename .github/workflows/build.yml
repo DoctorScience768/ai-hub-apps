@@ -1,0 +1,41 @@
+name: Build Qualcomm GenieX APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Compatible Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build Android App
+        run: |
+          # Accept Android SDK licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # Find the exact app directory dynamically and enter it
+          TARGET_DIR=$(find . -type d -name "geniex_chat_android" | head -n 1)
+          cd "$TARGET_DIR"
+          
+          # Compile using the enforced Gradle version
+          gradle assembleDebug
+
+      - name: Save Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: geniex-chat-debug-apk
+          path: '**/*.apk'
